@@ -1,0 +1,7 @@
+theme,description,participants,percentage
+Judging progress involves more than passing tests,"Participants assessed whether the requested change had been made and whether they understood the implementation, alongside test outcomes.",19,52.8
+The value of branching depends on the work being organized,Participants related their preference for branching or linear interaction to task size and file organization.,19,52.8
+Context separation must preserve relevant information,Participants discussed keeping context focused while retaining access to information needed across branches.,17,47.2
+Integration connects local progress to the shared implementation,"Bringing separate work together involved deciding where to continue, transferring changes, and checking the combined state.",17,47.2
+Test results become instructions for the next AI action,Participants selected and passed test feedback to the assistant to guide the next revision.,14,38.9
+Task boundaries make progress easier to follow,Working on separate task parts helped participants follow the remaining work and relate failures to the part under development.,8,22.2

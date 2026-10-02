@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src 'nonce-{{nonce}}'; img-src {{cspSource}} https: data:; font-src {{cspSource}};" />
+  <link rel="stylesheet" href="{{cssUri}}" />
+    <style>
+    html, body { height: 100% !important; margin: 0 !important; }
+    #app { height: 100% !important; display: flex !important; flex-direction: column !important; }
+
+    #workspace {
+      display: flex !important;
+      flex-direction: row !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    #chat-pane {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    #conversation {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+    }
+
+    #pane-resizer {
+      flex: 0 0 8px !important;
+      cursor: col-resize !important;
+      background: var(--vscode-editorWidget-border, #454545) !important;
+      opacity: 0.6 !important;
+      align-self: stretch !important;
+    }
+    #pane-resizer:hover,
+    #pane-resizer.dragging { opacity: 1 !important; background: #4FC3F7 !important; }
+    #pane-resizer[hidden] { display: none !important; }
+
+    #history-pane {
+      flex: 0 0 auto !important;
+      width: 400px !important;
+      min-width: 220px !important;
+      max-width: 85% !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+    }
+    #history-pane[hidden] { display: none !important; }  /* ← THE FIX */
+
+    #history-graph-container {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      overflow: hidden !important;   /* camera handles pan/zoom; no scrollbars */
+      position: relative !important;
+    }
+
+    #history-svg { display: block; width: 100%; height: 100%; }
+  </style>
+  <title>ContextBranch</title>
+</head>
+<body>
+  <div id="app">
+
+    
+  <header class="topbar">
+    <div class="branch-pill" id="branch-pill" title="Click to switch branch">
+      <span class="branch-icon">⎇</span>
+      <span class="branch-name" id="active-branch-name">main</span>
+      <span class="branch-caret">▾</span>
+    </div>
+    <button class="checkpoint-btn" id="btn-checkpoint" title="Save a checkpoint of the current branch">
+      <span class="checkpoint-btn-icon">⎘</span>
+      <span class="checkpoint-btn-label">Checkpoint</span>
+    </button>
+    <div class="topbar-actions">
+      <div class="api-counter" id="api-counter" title="Total API calls across all branches in this project" hidden>
+        <span class="api-counter-icon">⚡</span>
+        <span class="api-counter-value" id="api-counter-value">0</span>
+      </div>
+      <button class="icon-btn" id="btn-toggle-history" title="Show history graph">⎇</button>
+      <button class="icon-btn" id="btn-menu" title="Branch actions">⋯</button>
+    </div>
+  </header>
+
+    
+    <div class="banner" id="banner" hidden></div>
+
+    
+    <section class="study-toolbar" id="study-toolbar" hidden>
+      <div class="study-task-line">
+        <strong id="study-task-title"></strong>
+        <span id="study-timer"></span>
+      </div>
+      <div class="study-toolbar-actions">
+        <button class="btn-primary" id="study-start">Start task</button>
+        <button class="btn-secondary" id="study-run-tests" disabled>Run public tests</button>
+        <button class="btn-secondary" id="study-integrate" hidden disabled>Integrate this state into main</button>
+        <button class="btn-secondary" id="study-finish" disabled>Finish task</button>
+      </div>
+    </section>
+
+    
+    <div class="banner info preview-bar" id="preview-bar" hidden>
+      <span id="preview-bar-text">Previewing changes in your files.</span>
+      <span style="margin-left:auto; display:inline-flex; gap:6px;">
+        <button class="preview-btn apply" id="preview-apply">Apply</button>
+        <button class="preview-btn" id="preview-dismiss">Dismiss</button>
+      </span>
+    </div>
+
+    
+    <div class="dropdown" id="branch-dropdown" hidden>
+      <div class="dropdown-section">
+        <div class="dropdown-label">Active branches</div>
+        <ul id="branch-list-active"></ul>
+      </div>
+      <div class="dropdown-section">
+        <div class="dropdown-label">Merged / abandoned</div>
+        <ul id="branch-list-archived"></ul>
+      </div>
+    </div>
+
+    
+    <div class="dropdown menu-dropdown" id="action-menu" hidden>
+      <button class="menu-item" data-action="decompose">
+        <span class="menu-icon">⎇</span> Decompose task into branches
+      </button>
+      <button class="menu-item" data-action="newBranch">
+        <span class="menu-icon">+</span> New branch from here
+      </button>
+      <button class="menu-item" data-action="merge" id="menu-merge">
+        <span class="menu-icon">⤵</span> Merge into another branch
+      </button>
+      <button class="menu-item" data-action="checkpoint">
+        <span class="menu-icon">⎘</span> Checkpoints
+      </button>
+      <button class="menu-item" data-action="preview" id="menu-preview">
+        <span class="menu-icon">👁</span> Preview changes in workspace
+      </button>
+      <button class="menu-item" data-action="apply" id="menu-apply">
+        <span class="menu-icon">📝</span> Apply artifacts to workspace
+      </button>
+      <button class="menu-item" data-action="saveCheckpoint">
+        <span class="menu-icon">📌</span> Save checkpoint here
+      </button>
+      <div class="menu-divider"></div>
+      <button class="menu-item danger" data-action="abandon" id="menu-abandon">
+        <span class="menu-icon">✕</span> Abandon branch
+      </button>
+    </div>
+
+    
+    <div class="workspace" id="workspace">
+
+      
+      <div class="chat-pane" id="chat-pane">
+
+        <main class="conversation" id="conversation">
+
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">💬</div>
+            <h2>Start a conversation</h2>
+            <p>Type a message below. The AI's reply will appear here.</p>
+            <p class="empty-hint">Use the <strong>⋯</strong> menu to branch, decompose tasks, or merge.</p>
+          </div>
+
+          <div class="messages" id="messages"></div>
+
+          <div class="streaming-bubble" id="streaming" hidden>
+            <div class="role-label">assistant</div>
+            <div class="streaming-text" id="streaming-text"></div>
+            <div class="streaming-indicator">⋯ generating</div>
+          </div>
+
+        </main>
+
+        
+        <div class="edit-review" id="edit-review" hidden></div>
+
+        
+        <div class="composer">
+          <textarea id="composer-input"
+                    placeholder="Message..."
+                    rows="3"></textarea>
+          <div class="composer-row">
+            <div class="composer-status" id="composer-status"></div>
+            <div class="composer-buttons">
+              <button class="btn-stop" id="btn-stop" hidden>Stop</button>
+              <button class="btn-send" id="btn-send">Send</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      
+      <div class="pane-resizer" id="pane-resizer" hidden></div>
+
+      
+      <aside class="history-pane" id="history-pane" hidden>
+        <div class="history-toolbar">
+          <span class="history-title" id="history-title">Development history</span>
+          <div class="history-toolbar-actions">
+            <button class="icon-btn" id="btn-history-refresh" title="Refresh">↻</button>
+            <button class="icon-btn" id="btn-history-close" title="Close panel">×</button>
+          </div>
+        </div>
+
+        <div class="history-graph-container" id="history-graph-container">
+          <svg id="history-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="history-empty" id="history-empty" hidden>
+            <p class="muted">No history yet.</p>
+            <p class="muted" id="history-empty-hint">Create a branch or save a checkpoint to see it here.</p>
+          </div>
+
+          
+          <div class="graph-controls" id="graph-controls" title="Drag the canvas to pan · scroll to zoom">
+            <button class="gc-btn" id="gc-zoom-in"  title="Zoom in">+</button>
+            <button class="gc-btn gc-btn-reset" id="gc-reset" title="Fit to view">⊙</button>
+            <button class="gc-btn" id="gc-zoom-out" title="Zoom out">−</button>
+          </div>
+
+          
+          <div class="graph-legend" id="graph-legend">
+            <div class="legend-chip">Legend</div>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="legend-glyph legend-circle" style="background:#4FC3F7;"></span>
+                <span>Branch (active)</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-glyph legend-circle" style="background:#566179; border:1px solid #aeb7c9;"></span>
+                <span>Branch</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-glyph legend-tri legend-tri-orange"></span>
+                <span>Checkpoint</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-glyph legend-tri legend-tri-blue"></span>
+                <span>Fork point</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-glyph legend-diamond"></span>
+                <span>Merge</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="history-detail" id="history-detail" hidden>
+          <div class="history-detail-header">
+            <strong id="history-detail-title">Details</strong>
+            <button class="icon-btn close-btn" id="history-detail-close">×</button>
+          </div>
+          <div id="history-detail-body"></div>
+        </aside>
+      </aside>
+
+    </div>
+
+    
+
+    <div class="modal" id="modal-decompose" hidden>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Decompose into branches</h3>
+          <button class="icon-btn close-btn" data-close="modal-decompose">×</button>
+        </div>
+        <p class="muted">Describe a task. The AI will propose sub-branches and a merge order.</p>
+        <textarea id="decompose-task" placeholder="e.g. Build an auth module with login, signup, and password reset..." rows="4"></textarea>
+        <div id="decompose-result" hidden></div>
+        <div class="modal-actions">
+          <button class="btn-secondary" data-close="modal-decompose">Cancel</button>
+          <button class="btn-primary" id="decompose-go">Decompose</button>
+          <button class="btn-primary" id="decompose-create-all" hidden>Create all branches</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="modal-branch" hidden>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>New branch</h3>
+          <button class="icon-btn close-btn" data-close="modal-branch">×</button>
+        </div>
+        <label class="field-label">Name</label>
+        <input type="text" id="branch-name" placeholder="e.g. auth-jwt" />
+        <label class="field-label">Scope (optional)</label>
+        <input type="text" id="branch-desc" placeholder="One-line description" />
+        <div class="modal-actions">
+          <button class="btn-secondary" data-close="modal-branch">Cancel</button>
+          <button class="btn-primary" id="branch-create">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="modal-merge" hidden>
+      <div class="modal-content modal-wide">
+        <div class="modal-header">
+          <h3>Merge branch</h3>
+          <button class="icon-btn close-btn" data-close="modal-merge">×</button>
+        </div>
+        <div class="merge-summary">
+          <strong id="merge-source-name"></strong>
+          <span class="arrow">→</span>
+          <select id="merge-target-select"></select>
+        </div>
+        <label class="merge-cascade-optin" id="merge-cascade-optin">
+          <input type="checkbox" id="merge-allow-cascade">
+          <span>
+            <strong>Allow AI cascading-edit proposals</strong>
+            <small>Let ContextBranch suggest changes to other files that may need updating. Each proposal is still opt-in.</small>
+          </span>
+        </label>
+        <div id="merge-preview" hidden>
+          <div class="verification-panel" id="merge-verification"></div>
+          <div class="info-block" id="merge-rebase-notes" hidden></div>
+          <div class="info-block" id="merge-artifact-changes" hidden></div>
+          <div class="info-block" id="merge-cascading" hidden>
+            <div class="info-block-header">
+              <strong>AI-proposed cascading edits (opt-in)</strong>
+              <span class="info-block-sub" id="merge-cascading-summary"></span>
+            </div>
+            <div id="merge-cascading-list"></div>
+          </div>
+          <div class="info-block" id="merge-conflicts" hidden>
+            <div class="info-block-header">
+              <strong>Conflict resolution</strong>
+              <span class="info-block-sub">Review an AI-proposed resolution, ask it to revise it, or resolve the conflict directly in VS Code.</span>
+            </div>
+            <div class="merge-manual-help" id="merge-manual-help" hidden>
+              Conflict markers are open in the editor as an unsaved intermediate merge. Use VS Code's <strong>Accept Current</strong>, <strong>Accept Incoming</strong>, <strong>Accept Both</strong>, or edit the file yourself. Then return here and finalize the resolved merge.
+            </div>
+            <button class="btn-secondary" id="merge-resolve-in-ide" hidden>Resolve conflicts in IDE</button>
+            <button class="btn-secondary" id="merge-cancel-ide" hidden>Cancel IDE resolution</button>
+            <div id="merge-conflicts-list"></div>
+          </div>
+          <div class="info-block" id="merge-synthesis" hidden></div>
+        </div>
+        <div id="merge-running" hidden>
+          <div class="spinner"></div> Running verification and cascade analysis…
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="merge-cancel">Cancel</button>
+          <button class="btn-primary" id="merge-preview-btn">Preview merge</button>
+          <button class="btn-primary" id="merge-confirm" hidden>Finalize merge</button>
+          <button class="btn-primary" id="merge-finalize-ide" hidden>Finalize resolved merge</button>
+          <button class="btn-danger" id="merge-force" hidden>Force merge</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="modal" id="modal-checkpoint" hidden>
+      <div class="modal-content modal-wide">
+        <div class="modal-header">
+          <h3>Checkpoints</h3>
+          <button class="icon-btn close-btn" data-close="modal-checkpoint">×</button>
+        </div>
+        <p class="muted">Create a snapshot of the current branch, then restore back to any earlier snapshot in this branch.</p>
+        <div class="checkpoint-controls">
+          <input type="text" id="checkpoint-label" placeholder="Optional label, e.g. before refactor" />
+          <button class="btn-primary" id="checkpoint-create">Create checkpoint</button>
+        </div>
+        <div class="info-block" id="checkpoint-summary"></div>
+        <div class="checkpoint-list" id="checkpoint-list"></div>
+      </div>
+    </div>
+
+    
+    <div class="status-area" id="status-area"></div>
+
+  </div>
+
+  <script nonce="{{nonce}}" src="{{jsUri}}"></script>
+</body>
+</html>

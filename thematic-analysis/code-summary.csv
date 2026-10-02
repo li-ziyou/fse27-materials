@@ -1,0 +1,65 @@
+code,label,initial_participant_label,additional_participant_labels,status
+C01,Fewer tests in each GitChat branch make problems easier to track,P010,,Researcher confirmed
+C02,Mapping failed tests to code requires additional understanding in Linear,P010,,Researcher confirmed
+C03,Branching is more suitable for complex tasks,P010,P009;P012,Researcher confirmed
+C04,Linear is sufficient for small tasks,P010,P009,Researcher confirmed
+C05,Using test results to check AI claims of completion,P010,,Researcher confirmed
+C06,Organizing implementation requests around task items,P010,,Researcher confirmed
+C07,Asking AI to examine failing tests,P010,P009;P017,Researcher confirmed
+C08,AI changes exceed the participant's requested scope,P010,,Researcher confirmed
+C09,Attributing changes beyond the requested scope to AI misreading context,P010,,Researcher confirmed
+C10,Perceiving too much task content for the model to understand in Linear,P010,,Researcher confirmed
+C11,Requesting a single test to narrow the problem being addressed,P010,,Researcher confirmed
+C12,Scrolling and locating content add interaction effort in Linear,P010,,Researcher confirmed
+C13,Unfamiliarity with the task language makes code harder to handle,P010,,Researcher confirmed
+C14,Endorsing preservation of a previously correct state after a moderator prompt,P010,,Researcher confirmed
+C15,"Difficulty separating personal, tool, and model performance when rating the task",P010,,Researcher confirmed
+C16,Asking whether passing all tests means implementation is complete,P010,,Researcher confirmed
+C17,Using a Git analogy to understand the relationship between conversation branches and code,P019,,Researcher confirmed
+C18,Reconsidering whether to test before proceeding after encountering difficulty,P019,,Researcher confirmed
+C19,Perceiving overlap between subtasks that prevents fully independent work,P019,,Researcher confirmed
+C20,Treating tests after integration as necessary for assessing the overall result,P019,,Researcher confirmed
+C21,Wanting AI to explain in natural language what it actually did,P019,,Researcher confirmed
+C22,Wanting precise feedback on the location of a problem,P019,,Researcher confirmed
+C23,Expecting a narrower context to help a small model handle the task,P019,,Researcher confirmed
+C24,Using code simplicity as a reason to accept an implementation,P021,,Researcher confirmed
+C25,Reflecting on insufficient code analysis,P021,,Researcher confirmed
+C26,Clarifying branch order and the role of main,P021,P008;P009,Researcher confirmed
+C27,Perceiving model performance as affecting the tool experience,P021,,Researcher confirmed
+C28,Copying and pasting individual feedback items adds interaction time,P021,,Researcher confirmed
+C29,Believing that resolving errors requires more personal involvement,P021,,Researcher confirmed
+C30,Valuing separate branches and merging,P021,,Researcher confirmed
+C31,Proposing a separate branch for each failing test,P021,,Researcher confirmed
+C32,Expecting branches to support parallel work,P021,,Researcher confirmed
+C33,Reading error logs and model output adds effort,P021,P030,Researcher confirmed
+C34,Not noticing the context retention described for merging,P014,,Researcher confirmed
+C35,Finding branch switching by clicking easier than entering commands,P014,,Researcher confirmed
+C36,Preferring to divide a task into parts and handle them separately,P014,,Researcher confirmed
+C37,Difficulty identifying which task part caused a failure when handling several parts together,P014,,Researcher confirmed
+C38,Wanting to select files for inclusion in a commit,P014,,Researcher confirmed
+C39,Passing tests without understanding what went wrong earlier,P014,,Researcher confirmed
+C40,Reading the task first to form an independent understanding,P003,P001;P009;P011,Researcher confirmed
+C41,Clarifying whether AI can edit code and run tests directly,P003,,Researcher confirmed
+C42,Planning to address failing tests one at a time,P003,,Researcher confirmed
+C43,Interpreting implementation mainly performed by AI as requiring little personal effort,P003,,Researcher confirmed
+C44,Asking whether a branch needs the full task description,P003,,Researcher confirmed
+C45,Wanting to integrate branch work after time has expired,P003,,Researcher confirmed
+C46,Wanting to design branches according to task needs,P003,P012,Researcher confirmed
+C47,Questioning whether a long conversation retains the original task goal,P003,,Researcher confirmed
+C48,Reading code to check and revise personal judgments,P001/P011,,Researcher confirmed
+C49,Asking AI to stay within scope and avoid unrequested output,P001/P011,,Researcher confirmed
+C50,Wanting to bring updates from main into an existing branch,P001/P011,,Researcher confirmed
+C51,Preferring Linear in this session because branching adds complexity without perceived efficiency gains,P008,,Researcher confirmed
+C52,Valuing consistency with Git workflows for larger projects,P008,,Researcher confirmed
+C53,Preferring a simpler Linear workflow for personal projects,P008,,Researcher confirmed
+C54,Reconsidering whether providing the whole task at once would be better after incremental work stalls,P009,,Researcher confirmed
+C55,Improved overall test results do not establish that the targeted problem is fixed,P009,,Researcher confirmed
+C56,Difficulty identifying the current state when comparing branch and main results,P009,,Researcher confirmed
+C57,Distinguishing earlier changes from changes currently awaiting approval,P004,,Researcher confirmed
+C58,Not knowing which coding examples to provide to AI for the current task,P012,,Researcher confirmed
+C59,Perceiving the study task as too small to show a difference from branching,P012,,Researcher confirmed
+C60,Wanting subsequent tasks to access information needed from earlier implementation work,P016,,Researcher confirmed
+C61,Considering branching potentially useful for models with small context windows,P016,,Researcher confirmed
+C62,Finding Parts A and B less overwhelming than the full set of failing tests,P017,,Researcher confirmed
+C63,Believing separate contexts for different files can reduce repeated errors,P017,,Researcher confirmed
+C64,Choosing Linear or branching according to whether a task involves one or several files,P017,,Researcher confirmed

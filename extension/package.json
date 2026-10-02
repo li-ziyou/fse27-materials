@@ -1,0 +1,190 @@
+{
+  "name": "contextbranch",
+  "displayName": "ContextBranch",
+  "description": "Git-style branching and merging for AI coding chat",
+  "version": "0.3.0",
+  "publisher": "contextbranch",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "contextbranch.open",
+        "title": "ContextBranch: Open Panel",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "contextbranch.setApiKey",
+        "title": "ContextBranch: Set API Key"
+      },
+      {
+        "command": "contextbranch.exportStudyData",
+        "title": "ContextBranch: Export Study Data"
+      },
+      {
+        "command": "contextbranch.resetWorkspace",
+        "title": "ContextBranch: Reset Workspace (Danger)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "contextbranch.open",
+          "when": "view == contextbranch.sidebar",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "secondarySidebar": [
+        {
+          "id": "contextbranch",
+          "title": "ContextBranch",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "contextbranch": [
+        {
+          "type": "webview",
+          "id": "contextbranch.sidebar",
+          "name": "ContextBranch"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ContextBranch",
+      "properties": {
+        "contextbranch.provider": {
+          "type": "string",
+          "enum": [
+            "anthropic",
+            "openai",
+            "openrouter",
+            "gemini"
+          ],
+          "default": "anthropic",
+          "description": "LLM provider. For OpenRouter, set contextbranch.model to a routed model id (e.g. openai/gpt-4o-mini).",
+          "enumDescriptions": [
+            "Anthropic (Claude). Key from console.anthropic.com",
+            "OpenAI. Key from platform.openai.com",
+            "OpenRouter \u2014 one key, many vendors' models (openai/*, anthropic/*, google/*). Key from openrouter.ai/keys",
+            "Google Gemini. Free tier with flash fallback. Key from aistudio.google.com"
+          ]
+        },
+        "contextbranch.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model id. Blank = provider default (and Gemini auto-fallback). Setting a value pins to that single model. OpenRouter examples: openai/gpt-4o-mini, anthropic/claude-3.5-sonnet, google/gemini-2.0-flash-001. Anthropic: claude-sonnet-4-6. OpenAI: gpt-4o."
+        },
+        "contextbranch.testCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Command to run on merge verification (empty = auto-detect)"
+        },
+        "contextbranch.lintCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Command to run for linting on merge verification"
+        },
+        "contextbranch.metaAgentEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Meta Agent suggestions"
+        },
+        "contextbranch.studyMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable study-mode telemetry logging"
+        },
+        "contextbranch.participantId": {
+          "type": "string",
+          "default": "",
+          "description": "Participant ID for study mode"
+        },
+        "contextbranch.condition": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "branched",
+            "contextbranch"
+          ],
+          "default": "branched",
+          "description": "Study condition. Prepared Study 2 workspaces override this value from .study/run.json."
+        },
+        "contextbranch.semanticMerge": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow the MergeAnalystAgent to propose cascading edits. Each merge has an explicit opt-in checkbox; every proposed edit is separately opt-in. Disable this setting to remove cascade analysis entirely (used as the textual-only merge baseline in the study)."
+        },
+        "contextbranch.autoApplyOnSwitch": {
+          "type": "boolean",
+          "default": true,
+          "description": "When switching branches, automatically write the new branch's artifacts to disk and remove files that existed only because of the previous branch. Makes branch switching feel like 'git checkout'. Disable if you want full manual control."
+        },
+        "contextbranch.captureUserEdits": {
+          "type": "boolean",
+          "default": true,
+          "description": "When you edit a file that is already an artifact in the active branch (e.g. you tweak the AI's output by hand), the watcher folds your edit back into the branch's artifact. Disable to keep AI-only authoring semantics."
+        },
+        "contextbranch.captureNewFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a NEW file appears in the workspace (created outside the AI conversation), claim it as an artifact in the active branch. Off by default because new-file claiming is surprising \u2014 turn on if you want full git-checkout semantics."
+        },
+        "contextbranch.hotContextChars": {
+          "type": "number",
+          "default": 14000,
+          "description": "Deprecated: file context is now selected by the Context Agent and small workspaces are sent in full."
+        },
+        "contextbranch.coldContextChars": {
+          "type": "number",
+          "default": 6000,
+          "description": "Deprecated: file context is now selected by the Context Agent and small workspaces are sent in full."
+        },
+        "contextbranch.reviewEdits": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show proposed file edits for review (accept/reject per change) before they are written. Turn off to auto-apply edits (still fail-safe: edits that can't be located are skipped, never guessed)."
+        },
+        "contextbranch.contextAgentEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use a separate Context Agent to infer which existing workspace files the coding agent should read from the full conversation. Disable only if you need to minimize one routing model call per turn."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production",
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package",
+    "compile": "tsc -noEmit"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.4",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@google/generative-ai": "^0.21.0",
+    "archiver": "^7.0.1",
+    "diff3": "^0.0.4",
+    "openai": "^4.50.0"
+  }
+}
